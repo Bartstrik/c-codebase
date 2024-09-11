@@ -9,3 +9,6 @@
 
 # Ignore executables
 *.exe
+
+#Ignore object files
+*.o
