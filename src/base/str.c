@@ -1,5 +1,8 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "str.h"
+
+
 
 int str_len(str s) {
     int n = 0;
@@ -7,6 +10,17 @@ int str_len(str s) {
         n++;
     }
     return n;
+}
+
+str str_alloc(str s) {
+    str new_s;
+    int len = str_len(s);
+    new_s = malloc(len);
+
+    for (int i = 0; i < len; i++) {
+        new_s[i] = s[i];
+    }
+    return new_s;
 }
 
 str str_toupper(str s, int len) {

@@ -63,10 +63,10 @@ long get_long(const str prompt) {
     return answer;
 }
 
-//limited to strs with a max length of 99 characters
+//limited to strs with a max length of 999 characters
 str get_str(const str prompt, int length) {
     int result = 0;
-    char format[8];
+    char format[9];
     str answer = malloc(length);
     while(result != 1) {
         printf("%s", prompt);
