@@ -5,8 +5,7 @@
 #include "str.h"
 
 
-//todo 
-//make a template for this
+
 
 char get_char(const str prompt) {
     int result = 0;
@@ -64,6 +63,8 @@ long get_long(const str prompt) {
 }
 
 //limited to strs with a max length of 999 characters
+//issue where prompt can not use %i the same way printf can to pass variables
+//also needs to change so length isn't used 
 str get_str(const str prompt, int length) {
     int result = 0;
     char format[9];
