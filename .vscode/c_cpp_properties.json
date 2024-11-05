@@ -4,7 +4,8 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/src/base"
+                "${workspaceFolder}/src/base",
+                "${workspaceFolder}/src/editor/helper_files"
             ],
             "defines": [],
             "windowsSdkVersion": "10.0.19041.0",
