@@ -3,16 +3,14 @@
 int read_key(char* key) {
     int nread;
     char buf[256];
-    int index;
+    int index = 0;
 
     nread = read(STDIN_FILENO, buf, sizeof(buf));
     if(nread == 0) return 0;
     if (nread == -1) return -1;
 
     for (int i = 0; i < nread; i++) {
-        if (buf[i] == '\e') {
-            index = 0;
-        }
+        if (buf[i] == '\e') index = 0;
         key[index] = buf[i];
         index++;
     }

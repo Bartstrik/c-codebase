@@ -10,7 +10,7 @@ void configure_terminal();
 void reset_terminal();  
 void signal_handler(__attribute__((unused)) int signum);
 void refresh_screen();
-int draw_rows();
+int draw_screen();
 int draw_topbar();
 int draw_text();
 int draw_tildes();

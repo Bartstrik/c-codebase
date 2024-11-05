@@ -2,8 +2,6 @@
 
 
 void die(const char* s) {
-    write(STDOUT_FILENO, "\e[2J", 4);
-    write(STDOUT_FILENO, "\e[H", 3);
     reset_terminal();
 
     perror(s);
@@ -43,14 +41,13 @@ void signal_handler(__attribute__((unused)) int signum) {
 }
 
 void refresh_screen() {
-    write(STDOUT_FILENO, "\e[2J", 4);
     write(STDOUT_FILENO, "\e[H", 3);
     write(STDOUT_FILENO, "\e[?25l", 6);
 
-    if (draw_rows() == -1) die("draw_rows");
+    if (draw_screen() == -1) die("draw_screen");
 }
 
-int draw_rows() {
+int draw_screen() {
     if (draw_topbar() == -1) die("draw_topbar");
     if (draw_text() == -1) die("draw_text");
     if (draw_tildes() == -1) die("draw_tildes");
@@ -147,6 +144,7 @@ int get_cursor_position(int* rows, int* cols) {
 }
 
 void init_editor() {
+    write(STDOUT_FILENO, "\e[2J", 4);
     editor.cursor_x = 1;
     editor.cursor_y = 2;
     if (get_window_size(&editor.window_rows, &editor.window_cols) == -1) die("get_window_size");
