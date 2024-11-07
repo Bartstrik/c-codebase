@@ -4,60 +4,33 @@
 
 
 #include "editor.h"
+#include "../base/str.h"
+#include "../base/types.h"
+#include "helper_files/terminal.h"
+#include "helper_files/file_handler.h"
+#include "helper_files/renderer.h"
 
+int exit_loop = 0;
 node* base = NULL;
 editor_config editor;
 
-int main(int argc, str* argv) {
-    if (argc != 2) {
-        printf("Usage: ./editor [file]\n");
-        return 1;
-    }
+int main(int argc, char** argv) {
 
-
-    editor.filename = argv[1];
-    FILE *input = fopen(editor.filename, "r");
-    if (input == NULL) {
-        printf("Could not open file\n"); 
-        return 1;
-    }
-
-    u8 result = load_file(input);
-
-    //open files 
-    //load files into memory
-    //configure terminal
-    //configure renderer
+    init_files(argc, argv);
     configure_terminal();
     init_editor();
     signal(SIGINT, signal_handler);
 
-    //while exit_loop
-    //read user input
-    //process user input
-    while(1) {
+    while(!exit_loop) {
         refresh_screen();
         read_input();
     }
-    
-    
 
-    //load file into linked list of char's
-    //reading file backwards because it creates the linked list in order. 
-    //could choose not to do this and keep the linked list in reversed order,
-    //but i chose not to do this for simplicity's sake
-    result = load_file(input);
-   
-    result = write_backup(editor.filename);
-    if (result != 0) {
-        printf("error writing backup");
-        return 1;
-    }
+    reset_terminal();
+    
+    if (write_backup(editor.filename) == -1) die("write_backup");
 
-    result = save_quit_file(input);
-    if (result != 0) {
-        printf("error writing backup");
-        return 1;
-    }
+    if (save_quit() == -1) die("save_quit");
+
     return 0;
 }

@@ -5,19 +5,20 @@ void die(const char* s) {
     reset_terminal();
 
     perror(s);
+    sleep(100);
     exit(1);
 }
 
 void configure_terminal() {
     if (tcgetattr(STDIN_FILENO, &editor.old_termios) == -1) die("tcgetattr");
-    atexit(reset_terminal);
+    // atexit(reset_terminal);
     editor.new_termios = editor.old_termios;
 
     //TODO figure out which flags i need to set
     editor.new_termios.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
     editor.new_termios.c_oflag &= ~(OPOST);
     editor.new_termios.c_cflag |= (CS8);
-    editor.new_termios.c_lflag &= ~(ICANON | ECHO | IEXTEN); //turn off echo and use non-canonical mode | ISIG to disable CTRL + C 
+    editor.new_termios.c_lflag &= ~(ICANON | ECHO | IEXTEN | ISIG); //turn off echo and use non-canonical mode | ISIG to disable CTRL + C 
     
     editor.new_termios.c_cc[VMIN] = 0;
     editor.new_termios.c_cc[VTIME] = 10;
@@ -26,18 +27,17 @@ void configure_terminal() {
 }
 
 void reset_terminal() {
-    printf("\e[m"); //reset colors
-    printf("\e[?25h"); //show cursor
+    printf("\e[m");
+    printf("\e[?25h");
     printf("\e[2J");
     printf("\e[H");
     fflush(stdout);
     if (tcsetattr(STDIN_FILENO, TCSANOW, &editor.old_termios) == -1) die("tcsetattr");
 }
 
-void signal_handler(__attribute__((unused)) int signum) {
-    reset_terminal();
+void signal_handler(int signum) {
+    exit_loop = 1;
     printf("signal %i received, exiting\n", signum);
-    exit(0);
 }
 
 void refresh_screen() {
@@ -72,10 +72,19 @@ int draw_topbar() {
 }
 
 //-write databuffer(needs to check to make sure not to write more lines than the window has)
+//ugly
 int draw_text() {
+    int i = 0;
     node* tmp = base;
     while(tmp != NULL) {
-        write(STDOUT_FILENO, &tmp->c, sizeof(char));
+        if (tmp->c == '\n') {
+            write(STDOUT_FILENO, "\e[K", 3);
+            write(STDOUT_FILENO, "\r\n", 2);
+            i = 0;        
+        } else {
+            if (i < editor.window_cols) write(STDOUT_FILENO, &tmp->c, sizeof(char));
+            i++;
+        }
         tmp = tmp->next;
     }
 
@@ -88,7 +97,7 @@ int draw_tildes() {
     int tmp_y, tmp_x;
     if (get_cursor_position(&tmp_y, &tmp_x) == -1) die("get_cursor_position");
     //could also use a while loop for this, might be pretier
-    for (int y = tmp_y; y <= editor.window_rows; y++) {
+    for (int y = tmp_y; y < editor.window_rows; y++) {
         write(STDOUT_FILENO, "~", 1);
         write(STDOUT_FILENO, "\e[K", 3);
 
@@ -124,23 +133,16 @@ int get_window_size(int* rows, int* cols) {
 }
 
 int get_cursor_position(int* rows, int* cols) {
-    char buf[32];
-    unsigned int i = 0;
-    
-    if (write(STDOUT_FILENO, "\e[6n", 4) != 4) return -1;
-    fflush(stdout);
+    while(1) {
+        char buf[32];    
+        write(STDOUT_FILENO, "\e[6n", 4);
 
-    while (i < sizeof(buf) - 1) {
-        if (read(STDIN_FILENO, &buf[i], 1) != 1) break;
-        if (buf[i] == 'R') break;
-        i++;
+        if (read_key(buf) == -1) die("read_key");
+
+        if (buf[0] != '\e' || buf[1] != '[') continue;
+        if (sscanf(&buf[2], "%d;%d", rows, cols) != 2) continue;
+        return 0;
     }
-    buf[i] = '\0';
-
-    if (buf[0] != '\e' || buf[1] != '[') return -1;
-    if (sscanf(&buf[2], "%d;%d", rows, cols) != 2) return -1;
-
-    return 0;
 }
 
 void init_editor() {

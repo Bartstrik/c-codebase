@@ -10,12 +10,6 @@
 #include <sys/ioctl.h>
 #include <signal.h>
 
-#include "../base/str.h"
-#include "../base/types.h"
-#include "helper_files/terminal.h"
-#include "helper_files/file_handler.h"
-#include "helper_files/renderer.h"
-
 typedef struct node {
     char c;
     struct node* next;
@@ -31,6 +25,7 @@ typedef struct editor_config {
 
 } editor_config;
 
+extern int exit_loop;
 extern node* base;
 extern editor_config editor;
 

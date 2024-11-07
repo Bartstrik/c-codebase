@@ -2,6 +2,8 @@
 #define RENDERER_H
 
 #include "../editor.h"
+#include "../../base/str.h"
+#include "terminal.h"
 
 
 
