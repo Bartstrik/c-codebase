@@ -1,5 +1,5 @@
 #include "renderer.h"
-
+#include <string.h>
 
 void die(const char* s) {
     reset_terminal();
@@ -56,7 +56,7 @@ int draw_screen() {
 }
 
 int draw_topbar() {
-    int filename_len = str_len(editor.filename);
+    int filename_len = strlen(editor.filename);
     if (filename_len > editor.window_cols - 1) return -1;
     
     write(STDOUT_FILENO, "\e[48;5;2m", 9);

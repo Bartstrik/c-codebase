@@ -1,7 +1,7 @@
 C codebase for personal use
 
 editor next steps:
--fix issue where pressing multiple keys at once causes an error (done)
+-fix issue where draw_topbar/draw_text will draw more than the size of the terminal
 -update draw_text() function 
 -update read_input() function to :
     -write the input text to the screen

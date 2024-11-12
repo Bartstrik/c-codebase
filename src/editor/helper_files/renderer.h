@@ -2,7 +2,6 @@
 #define RENDERER_H
 
 #include "../editor.h"
-#include "../../base/str.h"
 #include "terminal.h"
 
 
@@ -10,7 +9,7 @@
 void die(const char* s);
 void configure_terminal();
 void reset_terminal();  
-void signal_handler(__attribute__((unused)) int signum);
+void signal_handler(int signum);
 void refresh_screen();
 int draw_screen();
 int draw_topbar();

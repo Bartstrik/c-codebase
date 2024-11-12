@@ -1,5 +1,5 @@
 #include "terminal.h"
-
+#include <string.h>
 
 int read_key(char* key) {
     int nread;
@@ -27,7 +27,7 @@ int read_input() {
     if(read_key(key) == -1) die("read_key");
     
     //ugly
-    int len = str_len(key);
+    int len = strlen(key);
     if (len == 0) return 0;
     if (len == 1) {
         if (iscntrl(key[0])) {

@@ -4,7 +4,6 @@
 
 
 #include "editor.h"
-#include "../base/str.h"
 #include "../base/types.h"
 #include "helper_files/terminal.h"
 #include "helper_files/file_handler.h"
