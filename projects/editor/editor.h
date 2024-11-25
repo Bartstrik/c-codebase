@@ -19,6 +19,8 @@ typedef struct editor_config {
     struct termios old_termios, new_termios;
     int window_rows;
     int window_cols;
+    int window_x;
+    int window_y;
     int cursor_x;
     int cursor_y;
     char* filename;

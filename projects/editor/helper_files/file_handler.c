@@ -103,7 +103,7 @@ int save_quit() {
 int init_files(int argc, char** argv) {
     if (argc != 2) {
         printf("Usage: ./editor [file]\n");
-        return 1;
+        return -1;
     }
 
 
@@ -111,20 +111,21 @@ int init_files(int argc, char** argv) {
     input = fopen(editor.filename, "r");
     if (input == NULL) {
         printf("Could not open file\n"); 
-        return 1;
+        return -1;
     }
 
     if (load_file(input) == -1) die("load_file");
     return 0;
 }
 
+//need to take into account the values of editor.window_y and x
 int update_dataset(char c, int row, int col) {
     int i = 0;
     node* tmp = base;
     node* prev = NULL;
 
-    col--;
-    row = row - 2;
+    row = row + editor.window_y - 2;
+    col = col + editor.window_x - 1;
 
     while(true) {
         if (row == 0 && col == i) {

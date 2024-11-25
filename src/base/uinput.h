@@ -1,18 +1,17 @@
 #ifndef UINPUT_H
 #define UINPUT_H
 
-#include "str.h"
 
-char get_char(const str prompt);
+char get_char(const char* prompt);
 
-double get_double(const str prompt);
+double get_double(const char* prompt);
 
-float get_float(const str prompt);
+float get_float(const char* prompt);
 
-int get_int(const str prompt);
+int get_int(const char* prompt);
 
-long get_long(const str prompt);
+long get_long(const char* prompt);
 
-str get_str(const str prompt, int length);
+char* get_str(const char* prompt, int length);
 
 #endif //INPUT_H

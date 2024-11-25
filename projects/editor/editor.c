@@ -4,7 +4,7 @@
 
 
 #include "editor.h"
-#include "../base/types.h"
+#include "../../src/base/types.h"
 #include "helper_files/terminal.h"
 #include "helper_files/file_handler.h"
 #include "helper_files/renderer.h"
@@ -15,7 +15,7 @@ editor_config editor;
 
 int main(int argc, char** argv) {
 
-    init_files(argc, argv);
+    if (init_files(argc, argv) == -1) die("init_files");
     configure_terminal();
     init_editor();
     signal(SIGINT, signal_handler);

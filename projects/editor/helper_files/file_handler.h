@@ -2,7 +2,7 @@
 #define FILE_HANDLER_H
 
 #include "../editor.h"
-#include "../../base/types.h"
+#include "../../../src/base/types.h"
 #include "renderer.h"
 
 #define MAX_FILENAME_SIZE 256

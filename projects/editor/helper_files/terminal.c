@@ -1,12 +1,66 @@
-#include "renderer.h"
+#include "terminal.h"
 #include <string.h>
 
-void die(const char* s) {
-    reset_terminal();
+int read_key(char* key) {
+    int nread;
+    char buf[256];
+    int index = 0;
 
-    perror(s);
-    sleep(100);
-    exit(1);
+    nread = read(STDIN_FILENO, buf, sizeof(buf));
+    if(nread == 0) return 0;
+    if (nread == -1) return -1;
+
+    for (int i = 0; i < nread; i++) {
+        if (buf[i] == '\e') index = 0;
+        key[index] = buf[i];
+        index++;
+    }
+    key[index] = '\0';
+
+    return 0;
+}
+
+int read_input() {
+    //key needs to be nulled to prevent garbage values from interfering, on second thougth a single '\0' is enough
+    char key[32];
+    key[0] = '\0';
+    if(read_key(key) == -1) die("read_key");
+    
+    int len = strlen(key);
+    if (len == 0) return 0;
+    if (len == 1) {
+        //maybe create a new function for handling single char inputs
+        if (iscntrl(key[0])) {
+            switch (key[0]) {
+                case CTRL_KEY('q'):
+                case CTRL_KEY('w'):
+                case CTRL_KEY('c'):
+                    write(STDOUT_FILENO, "\e[2J", 4);
+                    write(STDOUT_FILENO, "\e[H", 3);
+                    exit_loop = 1;
+                    break;
+                //case for backspace and enters
+            }
+        } else {
+            if (update_dataset(key[0], editor.cursor_y, editor.cursor_x) == -1) die("update_dataset");
+            editor.cursor_x++;
+        }
+        
+        return 0;
+    }
+    //handling ANSI escape sequences
+    if (key[0] == '\e' && key[1] == '[') {
+        switch (key[2]) {
+            case 'A':
+            case 'B':
+            case 'C':
+            case 'D':
+                move_cursor(key[2]);
+                break;
+        }
+        return 0;
+    }
+    return -1;
 }
 
 void configure_terminal() {
@@ -40,85 +94,6 @@ void signal_handler(int signum) {
     printf("signal %i received, exiting\n", signum);
 }
 
-void refresh_screen() {
-    write(STDOUT_FILENO, "\e[H", 3);
-    write(STDOUT_FILENO, "\e[?25l", 6);
-
-    if (draw_screen() == -1) die("draw_screen");
-}
-
-int draw_screen() {
-    if (draw_topbar() == -1) die("draw_topbar");
-    if (draw_text() == -1) die("draw_text");
-    if (draw_tildes() == -1) die("draw_tildes");
-    if (draw_cursor() == -1) die("draw_cursor");    
-    return 0;
-}
-
-int draw_topbar() {
-    int filename_len = strlen(editor.filename);
-    if (filename_len > editor.window_cols - 1) return -1;
-    
-    write(STDOUT_FILENO, "\e[48;5;2m", 9);
-    write(STDOUT_FILENO, editor.filename, filename_len);
-
-    for (int i = 0; i < editor.window_cols - filename_len; i++) {
-        write(STDOUT_FILENO, " ", 1);
-    }
-    
-    write(STDOUT_FILENO, "\r\n", 2);
-    write(STDOUT_FILENO, "\e[m", 3);
-    return 0;
-}
-
-//-write databuffer(needs to check to make sure not to write more lines than the window has)
-//ugly
-int draw_text() {
-    int i = 0;
-    node* tmp = base;
-    while(tmp != NULL) {
-        if (tmp->c == '\n') {
-            write(STDOUT_FILENO, "\e[K", 3);
-            write(STDOUT_FILENO, "\r\n", 2);
-            i = 0;        
-        } else {
-            if (i < editor.window_cols) write(STDOUT_FILENO, &tmp->c, sizeof(char));
-            i++;
-        }
-        tmp = tmp->next;
-    }
-
-    write(STDOUT_FILENO, "\e[K", 3);
-    write(STDOUT_FILENO, "\r\n", 2);
-    return 0;
-}
-
-int draw_tildes() {
-    int tmp_y, tmp_x;
-    if (get_cursor_position(&tmp_y, &tmp_x) == -1) die("get_cursor_position");
-    //could also use a while loop for this, might be pretier
-    for (int y = tmp_y; y < editor.window_rows; y++) {
-        write(STDOUT_FILENO, "~", 1);
-        write(STDOUT_FILENO, "\e[K", 3);
-
-        if (y < editor.window_rows) {
-            write(STDOUT_FILENO, "\r\n", 2);
-        }
-        
-    }
-    return 0;
-}
-
-int draw_cursor() {
-    char buf[11];
-    //using snprintf's return value as str_len
-    int n = snprintf(buf, sizeof(buf), "\e[%d;%dH", editor.cursor_y, editor.cursor_x);
-    write(STDOUT_FILENO, "\e[?25h", 6);
-    write(STDOUT_FILENO, buf, n);
-    return 0;
-}
-
-
 int get_window_size(int* rows, int* cols) {
     struct winsize ws;
 
@@ -149,7 +124,8 @@ void init_editor() {
     write(STDOUT_FILENO, "\e[2J", 4);
     editor.cursor_x = 1;
     editor.cursor_y = 2;
-    if (get_window_size(&editor.window_rows, &editor.window_cols) == -1) die("get_window_size");
+    editor.window_x = 0;
+    editor.window_y = 0;
 }
 
 void move_cursor(char key) {
@@ -158,29 +134,40 @@ void move_cursor(char key) {
             if (editor.cursor_y > 2) {
                 editor.cursor_y--;
                 write(STDOUT_FILENO, "\e[A", 3);
-            }  
+            } else {
+                editor.window_y--;
+            }
+
             break;
 
         case 'B':
             if(editor.cursor_y < editor.window_rows) {
                 editor.cursor_y++;
                 write(STDOUT_FILENO, "\e[B", 3);
+            } else {
+                editor.window_y++;
             }
+
             break;
 
         case 'C':
             if (editor.cursor_x < editor.window_cols) {
                 editor.cursor_x++;
                 write(STDOUT_FILENO, "\e[C", 3);
+            } else {
+                editor.window_x++;
             }
+
             break;
 
         case 'D':
             if (editor.cursor_x > 1) {
                 editor.cursor_x--;
                 write(STDOUT_FILENO, "\e[D", 3);
+            } else {
+                editor.window_x--;
             }
+
             break;
-        
     }
 }
