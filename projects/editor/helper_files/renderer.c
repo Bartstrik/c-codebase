@@ -46,11 +46,15 @@ int draw_topbar() {
     return 0;
 }
 
-//issue where text is drawn on next line if editor.window_x > 0 and the text is at col == window_cols, topbar also is erased
 int draw_text() {
     int row = 2;
     int col = 1;
+    //flag used for cases where no text is writen, so that no newline is printed at the end of this function
+    bool text_written = false;
+
+    if (base == NULL) return -1;
     node* tmp = base;
+
     for (int i = 0; i < editor.window_y; i++) {
         char prev = '\0';
         while (prev != '\n' && tmp != NULL) {
@@ -59,13 +63,16 @@ int draw_text() {
         }
     }
 
+    if (tmp != NULL) text_written = true;
+
     while(tmp != NULL) {
         if (col == 1) {
-            for (int i = 0; i < editor.window_x; i++) {
-                if (tmp->c != '\n' && tmp->next != NULL) {
+            for (int i = 0; i < editor.window_x && tmp != NULL; i++) {
+                if (tmp->c != '\n') {
                     tmp = tmp->next;
                 }
             }
+            if (tmp == NULL) break;
         }
 
         if (tmp->c == '\n') {
@@ -79,14 +86,15 @@ int draw_text() {
             row++;
             col = 1;        
         } else {
-            if (col <= editor.window_cols + editor.window_x) write(STDOUT_FILENO, &tmp->c, sizeof(char));
+            if (col <= editor.window_cols) write(STDOUT_FILENO, &tmp->c, sizeof(char));
             col++;
         }
         tmp = tmp->next;
     }
 
     write(STDOUT_FILENO, "\e[K", 3);
-    write(STDOUT_FILENO, "\r\n", 2);
+    // write(STDOUT_FILENO, "\r\n", 2);
+    if (row < editor.window_rows && text_written == true) write(STDOUT_FILENO, "\r\n", 2);
     return 0;
 }
 
@@ -94,10 +102,11 @@ int draw_tildes() {
     int tmp_y, tmp_x;
     if (get_cursor_position(&tmp_y, &tmp_x) == -1) die("get_cursor_position");
     //could also use a while loop for this, might be pretier
-    for (int y = tmp_y; y < editor.window_rows; y++) {
+    if (tmp_x != 1) return 0;
+    for (int y = tmp_y; y <= editor.window_rows; y++) {
         write(STDOUT_FILENO, "~", 1);
         write(STDOUT_FILENO, "\e[K", 3);
-
+        //pretty sure i can remove this if statement
         if (y < editor.window_rows) {
             write(STDOUT_FILENO, "\r\n", 2);
         }

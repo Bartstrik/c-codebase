@@ -43,7 +43,8 @@ int read_input() {
             }
         } else {
             if (update_dataset(key[0], editor.cursor_y, editor.cursor_x) == -1) die("update_dataset");
-            editor.cursor_x++;
+            move_cursor('C');
+            // editor.cursor_x++;
         }
         
         return 0;
@@ -134,7 +135,7 @@ void move_cursor(char key) {
             if (editor.cursor_y > 2) {
                 editor.cursor_y--;
                 write(STDOUT_FILENO, "\e[A", 3);
-            } else {
+            } else if (editor.window_y > 0){
                 editor.window_y--;
             }
 
@@ -164,7 +165,7 @@ void move_cursor(char key) {
             if (editor.cursor_x > 1) {
                 editor.cursor_x--;
                 write(STDOUT_FILENO, "\e[D", 3);
-            } else {
+            } else if (editor.window_x > 0){
                 editor.window_x--;
             }
 
